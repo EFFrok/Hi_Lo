@@ -4,7 +4,7 @@ print("Let's play Hi-Lo!")
 print("Here are your cards: ")
 
 player_hand = ["+", "-", "/"]
-removing = ["+", "-", "X", "x"]
+removing = ["+", "-", "X"]
 graveyard = []
 deck = ["0P", "1P", "2P", "3P", "4P", "5P", "6P", "7P", "8P", "9P", "10P", "NJ", "X",
         "0X", "1X", "2X", "3X", "4X", "5X", "6X", "7X", "8X", "9X", "10X", "NJ", "X",
@@ -19,23 +19,29 @@ print(player_hand)
 
 x_count = player_hand.count("X")
 
-while x_count > 0 in player_hand:
-        discarded = input("What to discard (+, - or X)?: ").upper()
-        while discarded not in removing or len(discarded) != 1:
-                discarded = input("Remove +, - or X: ").upper()
+while x_count > 0:
+        if "X" in player_hand:
+                discarded = input("What to discard (+, - or X)?: ").upper()
+                while discarded not in removing or len(discarded) != 1:
+                        discarded = input("Remove +, - or X: ").upper()
+                while deck[0] == "X":
+                        graveyard.append(deck.pop())
                 player_hand.remove(discarded)
-        while deck[0] == "X":
-                graveyard.append(deck.pop())
-
-        print(discarded, "removed, new card added to hand. Your current hand: ")
-        player_hand.append(deck.pop())
-        x_count -= 1
-
-print(player_hand)
+                player_hand.append(deck.pop())
+                x_count -= 1
+                print(discarded, "removed, new card added to hand. Your current hand: ")
+                print(player_hand)
 
 nj_count = player_hand.count("NJ")
-while nj_count > 0 in player_hand:
-        player_hand.append(deck.pop())
-        nj_count -= 1
+while nj_count > 0:
+        if "NJ" in player_hand:
+                if deck[0] == "X":
+                        graveyard.append(deck.pop())
+                if deck[0] == "NJ":
+                        player_hand.append(deck.pop())
+                player_hand.append(deck.pop())
+                nj_count -= 1
+                print(f"NJ in hand, new card added. Your current hand: ")
+                print(player_hand)
 
 print("Now make your equation.")
