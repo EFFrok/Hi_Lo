@@ -14,25 +14,28 @@ def main():
     player_hand, deck = hand(player_hand, deck)
     player_hand, deck = xcounter(player_hand, deck)
     player_hand, deck = scounter(player_hand, deck)
-    print("Now make your equation.")
-    number = player_eq(player_hand)
+    eq = input("Now make your equation: ")
+    number = player_eq(eq, player_hand)
+    while number == -100000:
+        number = player_eq(input("Make your equation: "), player_hand)
+    print(f"{number:.4f}")
+    newEq = input("Do you want to make a different equation? :").lower()
+    while newEq != "yes" and newEq != "no":
+        newEq = input("Yes or no?: ")
+    if newEq == "yes":
+        
     diff = hi_lo(number)
     if diff != 0:
         print("You were ", diff, " away from the target.")
     else:
         print("You hitted the target!")
     answer = input("New game? Type yes or no: ").lower()
-    while answer != "yes" & answer != "no":
+    while answer != "yes" and answer != "no":
         answer = input("Type yes or no: ")
     if answer == "yes":
         main()
     else:
         return print("Thanks for playing!")
-    eq = input("Now make your equation: ")
-    result = player_eq(eq, player_hand)
-    while result == -100000:
-        result = player_eq(input("Make your equation: "), player_hand)
-    print(f"{result:.4f}")
 
 
 
@@ -118,13 +121,13 @@ def player_eq(player_input, hand):
 
 def hi_lo(number):
     target = input("Do you want to make High(20) or Low(1) equation?: ").lower()
-    while target != "high" & target != "low":
+    while target != "high" and target != "low":
         target = input("Type High or Low: ")
     if target == "high":
         diff = 20 - number
     else:
         diff = 1 - number
-    return diff
+    return abs(diff)
 
 
 if __name__ == '__main__':
