@@ -15,7 +15,7 @@ def main():
     player_hand, deck = xcounter(player_hand, deck)
     player_hand, deck = scounter(player_hand, deck)
     print("Now make your equation.")
-    number = calculator(player_hand)
+    number = player_eq(player_hand)
     diff = hi_lo(number)
     if diff != 0:
         print("You were ", diff, " away from the target.")
