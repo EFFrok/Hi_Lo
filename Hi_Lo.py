@@ -55,3 +55,8 @@ def njcounter(player_hand, deck):
                         print(player_hand)
         return player_hand, deck
 
+def calculator(player_hand):
+        for card in player_hand:
+                for i in card:
+                        if i >= 0 & i <= 10:
+                                 card = i
