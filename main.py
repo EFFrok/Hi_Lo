@@ -116,16 +116,6 @@ def player_eq(player_input, hand):
             result /= operations[i]
     return result
 
-
-if __name__ == '__main__':
-    main()
-
-def calculator(player_hand):
-    for card in player_hand:
-        for i in card:
-            if i >= 0 & i <= 10:
-                card = i
-
 def hi_lo(number):
     target = input("Do you want to make High(20) or Low(1) equation?: ").lower()
     while target != "high" & target != "low":
