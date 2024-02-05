@@ -126,6 +126,9 @@ def player_eq(player_input, hand):
             result *= operations[i]
         elif operations[i] == "/":
             i += 1
+            if operations[i] == 0:
+                print("Can't divide by zero!")
+                return player_eq(input("Make a new equation: "), hand)
             result /= operations[i]
     
     print(f"{result:.4f}")
