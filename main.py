@@ -63,4 +63,4 @@ def calculator(player_hand):
     for card in player_hand:
         for i in card:
             if i >= 0 & i <= 10:
-                 card = i
+                card = i
