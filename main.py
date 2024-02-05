@@ -16,14 +16,14 @@ def main():
     player_hand, deck = scounter(player_hand, deck)
     eq = input("Now make your equation: ")
     number = player_eq(eq, player_hand)
-    while number == -100000:
-        number = player_eq(input("Make your equation: "), player_hand)
-    print(f"{number:.4f}")
-    newEq = input("Do you want to make a different equation? :").lower()
-    while newEq != "yes" and newEq != "no":
-        newEq = input("Yes or no?: ")
-    if newEq == "yes":
-        
+    newEq = "yes"
+    while newEq == "yes":
+        newEq = input("Do you want to make a different equation?: ").lower()
+        while newEq != "yes" and newEq != "no":
+            newEq = input("Yes or no?: ")
+        if newEq == "yes":
+            new = input("Make a new equation: ")
+            number = player_eq(new, player_hand)
     diff = hi_lo(number)
     if diff != 0:
         print("You were ", diff, " away from the target.")
@@ -83,26 +83,36 @@ def player_eq(player_input, hand):
     cards = player_input.upper().split(" ")
     operations = []
     result = 0
+    hand_copy = hand.copy()
 
     while len(cards) > 0:
         if cards[0] not in hand:
-            print("Make an equation from your hand:")
+            print("Make an equation from your hand: ")
             print(hand)
-            return -100000
+            return player_eq(input(""), hand)
         if len(cards[0]) > 2:
+            hand_copy.remove(cards[0])
             cards.pop(0)
             operations.append(10)
         elif len(cards[0]) == 2:
+            hand_copy.remove(cards[0])
             operations.append(int(cards.pop(0)[0]))
         elif cards[0] == "S":
+            hand_copy.remove(cards[0])
             cards.pop(0)
             if len(cards[0]) > 2:
                 operations.append(math.sqrt(10))
             else:
                 operations.append(math.sqrt(int(cards[0][0])))
+            hand_copy.remove(cards[0])
             cards.pop(0)
         else:
+            hand_copy.remove(cards[0])
             operations.append(cards.pop(0))
+    if len(hand_copy) != 0:
+        print("Make an equation with your entire hand: ")
+        print(hand)
+        return player_eq(input(""), hand)
     result = operations.pop(0)
     for i in range(len(operations)):
         if operations[i] == "-":
@@ -117,6 +127,8 @@ def player_eq(player_input, hand):
         elif operations[i] == "/":
             i += 1
             result /= operations[i]
+    
+    print(f"{result:.4f}")
     return result
 
 def hi_lo(number):
