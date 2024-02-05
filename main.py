@@ -1,19 +1,18 @@
 import random
 
-
 def main():
 
     player_hand = ["+", "-", "/"]
-    deck = ["0P", "1P", "2P", "3P", "4P", "5P", "6P", "7P", "8P", "9P", "10P", "NJ", "X",
-            "0X", "1X", "2X", "3X", "4X", "5X", "6X", "7X", "8X", "9X", "10X", "NJ", "X",
-            "0R", "1R", "2R", "3R", "4R", "5R", "6R", "7R", "8R", "9R", "10R", "NJ", "X",
-            "0H", "1H", "2H", "3H", "4H", "5H", "6H", "7H", "8H", "9H", "10H", "NJ", "X"]
+    deck = ["0G", "1G", "2G", "3G", "4G", "5G", "6G", "7G", "8G", "9G", "10G", "S", "X",
+            "0S", "1S", "2S", "3S", "4S", "5S", "6S", "7S", "8S", "9S", "10S", "S", "X",
+            "0B", "1B", "2B", "3B", "4B", "5B", "6B", "7B", "8B", "9B", "10B", "S", "X",
+            "0D", "1D", "2D", "3D", "4D", "5D", "6D", "7D", "8D", "9D", "10D", "S", "X"]
 
     print("Let's play Hi-Lo!")
     print("Here are your cards: ")
     player_hand, deck = hand(player_hand, deck)
     player_hand, deck = xcounter(player_hand, deck)
-    player_hand, deck = njcounter(player_hand, deck)
+    player_hand, deck = scounter(player_hand, deck)
     print("Now make your equation.")
 
 
@@ -34,7 +33,7 @@ def xcounter(player_hand, deck):
         discarded = input("What to discard (+, - or X)?: ").upper()
         while discarded not in removing or len(discarded) != 1:
             discarded = input("Remove +, - or X: ").upper()
-        while deck[0] == "X" or deck[0] == "NJ":
+        while deck[0] == "X" or deck[0] == "S":
             deck = deck[1:]
         player_hand.remove(discarded)
         player_hand.append(deck.pop(0))
@@ -44,15 +43,15 @@ def xcounter(player_hand, deck):
     return player_hand, deck
 
 
-def njcounter(player_hand, deck):
-    nj_count = player_hand.count("NJ")
-    while nj_count > 0:
-        if "NJ" in player_hand:
-            while deck[0] == "X" or deck[0] == "NJ":
+def scounter(player_hand, deck):
+    s_count = player_hand.count("S")
+    while s_count > 0:
+        if "S" in player_hand:
+            while deck[0] == "X" or deck[0] == "S":
                 deck = deck[1:]
             player_hand.append(deck.pop(0))
-            nj_count -= 1
-            print("NJ in hand, new card added. Your current hand: ")
+            s_count -= 1
+            print("S in hand, new card added. Your current hand: ")
             print(player_hand)
     return player_hand, deck
 
@@ -61,7 +60,7 @@ if __name__ == '__main__':
     main()
 
 def calculator(player_hand):
-        for card in player_hand:
-                for i in card:
-                        if i >= 0 & i <= 10:
-                                 card = i
+    for card in player_hand:
+        for i in card:
+            if i >= 0 & i <= 10:
+                 card = i
