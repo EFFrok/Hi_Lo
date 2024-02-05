@@ -14,7 +14,19 @@ def main():
     player_hand, deck = xcounter(player_hand, deck)
     player_hand, deck = scounter(player_hand, deck)
     print("Now make your equation.")
-
+    number = calculator(player_hand)
+    diff = hi_lo(number)
+    if diff != 0:
+        print("You were ", diff, " away from the target.")
+    else:
+        print("You hitted the target!")
+    answer = input("New game? Type yes or no: ").lower()
+    while answer != "yes" & answer != "no":
+        answer = input("Type yes or no: ")
+    if answer == "yes":
+        main()
+    else:
+        return print("Thanks for playing!")
 
 def hand(player_hand, deck):
 
@@ -55,12 +67,22 @@ def scounter(player_hand, deck):
             print(player_hand)
     return player_hand, deck
 
-
-if __name__ == '__main__':
-    main()
-
 def calculator(player_hand):
     for card in player_hand:
         for i in card:
             if i >= 0 & i <= 10:
                 card = i
+
+def hi_lo(number):
+    target = input("Do you want to make High(20) or Low(1) equation?: ").lower()
+    while target != "high" & target != "low":
+        target = input("Type High or Low: ")
+    if target == "high":
+        diff = 20 - number
+    else:
+        diff = 1 - number
+    return diff
+
+
+if __name__ == '__main__':
+    main()
