@@ -1,4 +1,5 @@
 import random
+import math
 
 def main():
 
@@ -27,6 +28,13 @@ def main():
         main()
     else:
         return print("Thanks for playing!")
+    eq = input("Now make your equation: ")
+    result = player_eq(eq, player_hand)
+    while result == -100000:
+        result = player_eq(input("Make your equation: "), player_hand)
+    print(f"{result:.4f}")
+
+
 
 def hand(player_hand, deck):
 
@@ -66,6 +74,51 @@ def scounter(player_hand, deck):
             print("S in hand, new card added. Your current hand: ")
             print(player_hand)
     return player_hand, deck
+
+
+def player_eq(player_input, hand):
+    cards = player_input.upper().split(" ")
+    operations = []
+    result = 0
+
+    while len(cards) > 0:
+        if cards[0] not in hand:
+            print("Make an equation from your hand:")
+            print(hand)
+            return -100000
+        if len(cards[0]) > 2:
+            cards.pop(0)
+            operations.append(10)
+        elif len(cards[0]) == 2:
+            operations.append(int(cards.pop(0)[0]))
+        elif cards[0] == "S":
+            cards.pop(0)
+            if len(cards[0]) > 2:
+                operations.append(math.sqrt(10))
+            else:
+                operations.append(math.sqrt(int(cards[0][0])))
+            cards.pop(0)
+        else:
+            operations.append(cards.pop(0))
+    result = operations.pop(0)
+    for i in range(len(operations)):
+        if operations[i] == "-":
+            i += 1
+            result -= operations[i]
+        elif operations[i] == "+":
+            i += 1
+            result += operations[i]
+        elif operations[i] == "X":
+            i += 1
+            result *= operations[i]
+        elif operations[i] == "/":
+            i += 1
+            result /= operations[i]
+    return result
+
+
+if __name__ == '__main__':
+    main()
 
 def calculator(player_hand):
     for card in player_hand:
