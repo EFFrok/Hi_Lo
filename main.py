@@ -30,10 +30,12 @@ def main():
 
     random.shuffle(deck)
 
+    start_hand = ["/", "+", "-"]
+
     hands = {player_name: [] for player_name in player_names}
     for player_name in player_names:
-        hands[player_name] = deck[:5]
-        deck = deck[5:]
+        hands[player_name] = start_hand + deck[:4]
+        deck = deck[4:]
 
     for player_socket, player_name in zip(players, player_names):
         player_socket.send(f"Welcome to the game, {player_name}!\nYour hand: {' '.join(hands[player_name])}".encode())
