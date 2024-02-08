@@ -25,10 +25,12 @@ def theGame(client_socket):
             if "Would you like to start" in message:
                 response = input("")
                 client_socket.send(response.encode())
-            elif "discard" in message:
-                discard = input("")
+            if "discard" in message:
+                discard = input("").strip().upper()
+                while discard not in ["+", "-", "X"]:
+                    discard = input("Remove +, - or X: ").strip().upper()
                 client_socket.send(discard.encode())
-            elif "Make your equation:" in message:
+            elif "equation" in message:
                 equation = input("")
                 client_socket.send(equation.encode())
             elif "High(20) or Low(1)" in message:

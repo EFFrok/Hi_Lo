@@ -97,25 +97,25 @@ def game_logic(players, player_names):
             equation = player_socket.recv(1024).decode().strip().upper()
             player_equations[player_name] = equation
         for player_socket, player_name in zip(players, player_names):
-            result = player_eq(equation, hands[player_name])
+            result = player_eq(equation, hands[player_name], player_socket)
             diff = hi_lo(result, player_socket)
             player_socket.send(f"Result: {result}, Difference from target: {diff}".encode())
-        # for player_socket in players:
-        #     player_socket.send("Are you ready? (yes/no): ".encode())
-        # ready = all(player_socket.recv(1024).decode().strip().lower() == "yes" for player_socket in players)
-        # if ready:
-        #     for player_socket in players:
-        #         result = player_eq(equation, hands[player_name])
-        #         diff = hi_lo(result)
-        #         player_socket.send(f"Result: {result}, Difference from target: {diff}".encode())
+        for player_socket in players:
+            player_socket.send("Are you ready? (yes/no): ".encode())
+        ready = all(player_socket.recv(1024).decode().strip().lower() == "yes" for player_socket in players)
+        if ready:
+            for player_socket in players:
+                result = player_eq(equation, hands[player_name], player_socket)
+                diff = hi_lo(result, player_socket)
+                player_socket.send(f"Result: {result}, Difference from target: {diff}".encode())
 
         # if not player_ready:
         #     player_socket.send("Time's up!")
 
         for player_socket, player_name in zip(players, player_names):
-            equation = player_equations.get(player_name, None)
+            equation = player_equations.get(player_name, "")
             if equation:
-                result = player_eq(equation, hands[player_name])
+                result = player_eq(equation, hands[player_name], player_socket)
                 diff = hi_lo(result, player_socket)
                 player_socket.send(f"Your final result: {result}, Difference from target: {diff}".encode())
             else:
@@ -164,17 +164,13 @@ def xcounter(player_hand, deck, player_socket):
 
     while x_count > 0:
         player_socket.send("What to discard (+, - or X)?: ".encode())
-        discarded = player_socket.recv(1024).decode().strip().upper()
-
-        while discarded not in removing or len(discarded) != 1:
-            player_socket.send("Remove +, - or X: ".encode())
-            discarded = player_socket.recv(1024).decode().strip().upper()
+        discarded = player_socket.recv(1024).decode()
         while deck[0] == "X" or deck[0] == "S":
             deck = deck[1:]
         player_hand.remove(discarded)
         player_hand.append(deck.pop(0))
         x_count -= 1
-        player_socket.send(f"{discarded} removed, new card added to hand. Your current hand: {player_hand}".encode())
+        player_socket.send(f"{discarded} removed, new card added to hand. Your current hand: {' '.join(player_hand)}".encode())
 
     return player_hand, deck
 
@@ -186,10 +182,10 @@ def scounter(player_hand, deck, player_socket):
                 deck = deck[1:]
             player_hand.append(deck.pop(0))
             s_count -= 1
-            player_socket.send(f"S in hand, new card added. Your current hand: {player_hand}".encode())
+            player_socket.send(f"S in hand, new card added. Your current hand: {' '.join(player_hand)}".encode())
     return player_hand, deck
 
-def player_eq(player_input, hand):
+def player_eq(player_input, hand, player_socket):
     cards = player_input.upper().split(" ")
     operations = []
     result = 0
@@ -197,9 +193,8 @@ def player_eq(player_input, hand):
 
     while len(cards) > 0:
         if cards[0] not in hand:
-            print("Make an equation from your hand: ")
-            print(hand)
-            return player_eq(input(""), hand)
+            player_socket.send(f"Make an equation from your hand: {' '.join(hand)}".encode())
+            return player_eq(player_socket.recv(1024).decode().strip().upper(), hand, player_socket)
         if len(cards[0]) > 2:
             hand_copy.remove(cards[0])
             cards.pop(0)
@@ -220,9 +215,8 @@ def player_eq(player_input, hand):
             hand_copy.remove(cards[0])
             operations.append(cards.pop(0))
     if len(hand_copy) != 0:
-        print("Make an equation with your entire hand: ")
-        print(hand)
-        return player_eq(input(""), hand)
+        player_socket.send(f"Make an equation from your hand: {' '.join(hand)}".encode())
+        return player_eq(player_socket.recv(1024).decode().strip().upper(), hand, player_socket)
     result = operations.pop(0)
     for i in range(len(operations)):
         if operations[i] == "-":
@@ -237,11 +231,11 @@ def player_eq(player_input, hand):
         elif operations[i] == "/":
             i += 1
             if operations[i] == 0:
-                print("Can't divide by zero!")
-                return player_eq(input("Make a new equation: "), hand)
+                player_socket.send(f"Can't divide by zero!\n Make a new equation: ".encode())
+                return player_eq(player_socket.recv(1024).decode().strip().upper(), hand, player_socket)
             result /= operations[i]
     
-    print(f"{result:.4f}")
+    player_socket.send(f"{result:.4f}".encode())
     return result
 
 def hi_lo(number, player_socket):
