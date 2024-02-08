@@ -1,14 +1,16 @@
 import socket
 
 def main():
+    player_name = input("Enter your player name: ")
     client_socket = toTheServer()
     theGame(client_socket)
     client_socket.close()
 
-def toTheServer():
+def toTheServer(player_name):
     server_address = ('127.0.0.1', 5555)
     client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     client_socket.connect(server_address)
+    client_socket.send(player_name.encode())
     return client_socket
 
 def theGame(client_socket):
