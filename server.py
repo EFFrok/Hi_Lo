@@ -209,8 +209,6 @@ def player_eq(player_input, hand, player_socket):
                 operations.append(math.sqrt(10))
             else:
                 operations.append(math.sqrt(int(cards[0][0])))
-            hand_copy.remove(cards[0])
-            cards.pop(0)
         else:
             hand_copy.remove(cards[0])
             operations.append(cards.pop(0))
