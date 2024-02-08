@@ -95,21 +95,21 @@ def game_logic(players, player_names):
         for player_socket in players:
             player_socket.send("Make your equation: ".encode())
         for player_socket, player_name in zip(players, player_names):
-            equation = player_socket.recv(1024).decode().strip().upper()
-            player_equations[player_name] = equation
+            packet = player_socket.recv(1024).decode().split(" ")
+            player_results[player_name] = float(packet[0])
+            target_choices[player_name] = packet[1]
+            diff_to_target[player_name] = float(packet[2])
         # for player_socket, player_name in zip(players, player_names):
-            result = player_eq(equation, hands[player_name], player_socket)
-            target, diff = hi_lo(result, player_socket)
-            player_socket.send(f"Result: {result:.4f}, Difference from target: {diff:.4f}".encode())
+        #     result = player_eq(equation, hands[player_name], player_socket)
+        #     target, diff = hi_lo(result, player_socket)
+        #     player_socket.send(f"Result: {result:.4f}, Difference from target: {diff:.4f}".encode())
         for player_socket in players:
             player_socket.send("Are you ready? (yes/no): ".encode())
         ready = all(player_socket.recv(1024).decode().strip().lower() == "yes" for player_socket in players)
         if ready:
             for player_socket, player_name in zip(players, player_names):
-                result = player_eq(player_equations[player_name], hands[player_name], player_socket)
-                target, diff = hi_lo(result, player_socket)
-                target_choices[player_name] = target
-                diff_to_target[player_name] = diff
+                result = player_results[player_name]
+                diff = diff_to_target[player_name]
                 player_socket.send(f"Result: {result:.4f}, Difference from target: {diff:.4f}".encode())
 
         # if not player_ready:
@@ -147,11 +147,14 @@ def game_logic(players, player_names):
         print("Continue game?")
         for player_socket in players:
             player_socket.send("Do you want to continue the game? (yes/no): ".encode())
+        for player_socket, player_name in zip(players, player_names):
             continue_response = player_socket.recv(1024).decode().strip().lower()
             if continue_response != "yes":
                 print(player_name, "left the game.")
                 players.remove(player_socket)
                 player_names.remove(player_name)
+            else:
+                print(player_name, "playing")
 
         if len(players) < 2:
             for player_socket in players:
