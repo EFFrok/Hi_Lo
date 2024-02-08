@@ -5,6 +5,10 @@ import time
 
 def main():
 
+    players, player_names = connections()
+    game_logic(players, player_names)
+
+def connections():
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server_socket.bind(('127.0.0.1', 5555))
     server_socket.listen(4) 
@@ -41,80 +45,99 @@ def main():
     if not all_ready:
         print("Time's out. Starting the game...")
 
-    deck = ["0G", "1G", "2G", "3G", "4G", "5G", "6G", "7G", "8G", "9G", "10G", "S", "X",
-            "0S", "1S", "2S", "3S", "4S", "5S", "6S", "7S", "8S", "9S", "10S", "S", "X",
-            "0B", "1B", "2B", "3B", "4B", "5B", "6B", "7B", "8B", "9B", "10B", "S", "X",
-            "0D", "1D", "2D", "3D", "4D", "5D", "6D", "7D", "8D", "9D", "10D", "S", "X"]
+def game_logic(players, player_names):
 
-    start_hand = ["+", "-", "/"]
+    while len(players) >= 2:
 
-    hands = {player_name: [] for player_name in player_names}
-    for player_name in player_names:
-        hands[player_name] = start_hand + deck[:4]
-        deck = deck[4:]
-    
-    for player_socket, player_name in zip(players, player_names):
-        player_socket.send(f"Welcome to the game, {player_name}!\nYour hand: {' '.join(hands[player_name])}".encode())
+        deck = ["0G", "1G", "2G", "3G", "4G", "5G", "6G", "7G", "8G", "9G", "10G", "S", "X",
+                "0S", "1S", "2S", "3S", "4S", "5S", "6S", "7S", "8S", "9S", "10S", "S", "X",
+                "0B", "1B", "2B", "3B", "4B", "5B", "6B", "7B", "8B", "9B", "10B", "S", "X",
+                "0D", "1D", "2D", "3D", "4D", "5D", "6D", "7D", "8D", "9D", "10D", "S", "X"]
 
-    player_equations = {}
-    target_choices = {}
-    player_results = {}
-    high_results = []
-    low_results = []
-
-    while True:
-        for player_socket, player_name in zip(players, player_names):
-            hands[player_name], deck = xcounter(hands[player_name], deck, player_socket)
-            hands[player_name], deck = scounter(hands[player_name], deck, player_socket)
-
-            player_ready = False
-            timeout_duration = 120
-            start_time = time.time()
-
-            while time.time() - start_time < timeout_duration:
-                player_socket.send("Make your equation: ".encode())
-                equation = player_socket.recv(1024).decode().strip().upper()
-                player_equations[player_name] = equation
-                result = player_eq(equation, hands[player_name])
-                diff = hi_lo(result)
-                player_socket.send(f"Result: {result}, Difference from target: {diff}".encode())
-
-                player_socket.send("Are you ready? (yes/no): ".encode())
-                ready_response = player_socket.recv(1024).decode().strip().lower()
-                if ready_response == "yes":
-                    player_ready = True
-                    break
-                result = player_eq(equation, hands[player_name])
-                diff = hi_lo(result)
-                player_socket.send(f"Result: {result}, Difference from target: {diff}".encode())
-
-            if not player_ready:
-                player_socket.send("Time's up!")
-
-        for player_socket, player_name in zip(players, player_names):
-            equation = player_equations.get(player_name, "")
-            if equation:
-                result = player_eq(equation, hands[player_name])
-                diff = hi_lo(result)
-                player_socket.send(f"Your final result: {result}, Difference from target: {diff}".encode())
-            else:
-                player_socket.send("No submissions have been made. You lost this round.".encode())
+        hands = {player_name: [] for player_name in player_names}
+        for player_name in player_names:
+            hands[player_name], deck = hand(hands[player_name], deck)
         
-        diff_to_target = {player: abs(result - target_choices[player]) for player, result in player_results.items()}
+        for player_socket, player_name in zip(players, player_names):
+            player_socket.send(f"Welcome to the game, {player_name}!\nYour hand: {' '.join(hands[player_name])}".encode())
 
-        high_winner = min(((player, diff) for player, diff in diff_to_target.items() if target_choices[player] == 'high'), key=lambda x: x[1], default=None)
-        low_winner = min(((player, diff) for player, diff in diff_to_target.items() if target_choices[player] == 'low'), key=lambda x: x[1], default=None)
+        player_equations = {}
+        target_choices = {}
+        player_results = {}
 
-        if high_winner:
-            print(f"High winner is: {high_winner[0]} with a difference of {high_winner[1]} to the target")
-        else:
-            print("No high equations were made.")
+        while True:
+            for player_socket, player_name in zip(players, player_names):
+                hands[player_name], deck = xcounter(hands[player_name], deck, player_socket)
+                hands[player_name], deck = scounter(hands[player_name], deck, player_socket)
 
-        if low_winner:
-            print(f"Low winner is: {low_winner[0]} with a difference of {low_winner[1]} to the target")
-        else:
-            print("No low equations were made.")
+                player_ready = False
+                timeout_duration = 120
+                start_time = time.time()
 
+                while time.time() - start_time < timeout_duration:
+                    player_socket.send("Make your equation: ".encode())
+                    equation = player_socket.recv(1024).decode().strip().upper()
+                    player_equations[player_name] = equation
+                    result = player_eq(equation, hands[player_name])
+                    diff = hi_lo(result)
+                    player_socket.send(f"Result: {result}, Difference from target: {diff}".encode())
+
+                    player_socket.send("Are you ready? (yes/no): ".encode())
+                    ready_response = player_socket.recv(1024).decode().strip().lower()
+                    if ready_response == "yes":
+                        player_ready = True
+                        break
+                    result = player_eq(equation, hands[player_name])
+                    diff = hi_lo(result)
+                    player_socket.send(f"Result: {result}, Difference from target: {diff}".encode())
+
+                if not player_ready:
+                    player_socket.send("Time's up!")
+
+            for player_socket, player_name in zip(players, player_names):
+                equation = player_equations.get(player_name, "")
+                if equation:
+                    result = player_eq(equation, hands[player_name])
+                    diff = hi_lo(result)
+                    player_socket.send(f"Your final result: {result}, Difference from target: {diff}".encode())
+                else:
+                    player_socket.send("No submissions have been made. You lost this round.".encode())
+            
+            diff_to_target = {player: abs(result - target_choices[player]) for player, result in player_results.items()}
+
+            high_winner = min(((player, diff) for player, diff in diff_to_target.items() if target_choices[player] == 'high'), key=lambda x: x[1], default=None)
+            low_winner = min(((player, diff) for player, diff in diff_to_target.items() if target_choices[player] == 'low'), key=lambda x: x[1], default=None)
+
+            if high_winner:
+                print(f"High winner is: {high_winner[0]} with a difference of {high_winner[1]} to the target")
+            else:
+                print("No high equations were made.")
+
+            if low_winner:
+                print(f"Low winner is: {low_winner[0]} with a difference of {low_winner[1]} to the target")
+            else:
+                print("No low equations were made.")
+            
+            player_socket.send("Do you want to continue the game? (yes/no): ".encode())
+            continue_response = player_socket.recv(1024).decode().strip().lower()
+            if continue_response != "yes":
+                players.remove(player_socket)
+                player_names.remove(player_name)
+
+            if len(players) < 2:
+                for player_socket in players:
+                    message = "Game over. Not enough players."
+                    player_socket.send(message.encode())
+                    player_socket.close()
+                players.clear()
+                player_names.clear()
+
+def hand(player_hand, deck):
+    start_hand = ["+", "-", "/"]
+    random.shuffle(deck)
+    player_hand.extend(start_hand + deck[:4])
+    deck = deck[4:]
+    return player_hand, deck
 
 def xcounter(player_hand, deck, player_socket):
     x_count = player_hand.count("X")
@@ -136,7 +159,6 @@ def xcounter(player_hand, deck, player_socket):
 
     return player_hand, deck
 
-
 def scounter(player_hand, deck, player_socket):
     s_count = player_hand.count("S")
     while s_count > 0:
@@ -147,7 +169,6 @@ def scounter(player_hand, deck, player_socket):
             s_count -= 1
             player_socket.send(f"S in hand, new card added. Your current hand: {player_hand}".encode())
     return player_hand, deck
-
 
 def player_eq(player_input, hand):
     cards = player_input.upper().split(" ")
@@ -213,7 +234,6 @@ def hi_lo(number):
     else:
         diff = 1 - number
     return abs(diff)
-
 
 if __name__ == '__main__':
     main()
