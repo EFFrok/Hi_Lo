@@ -81,6 +81,7 @@ def game_logic(players, player_names):
 
         player_equations = {}
         target_choices = {}
+        diff_to_target = {}
         player_results = {}
 
         for player_socket, player_name in zip(players, player_names):
@@ -96,52 +97,61 @@ def game_logic(players, player_names):
         for player_socket, player_name in zip(players, player_names):
             equation = player_socket.recv(1024).decode().strip().upper()
             player_equations[player_name] = equation
-        for player_socket, player_name in zip(players, player_names):
+        # for player_socket, player_name in zip(players, player_names):
             result = player_eq(equation, hands[player_name], player_socket)
-            diff = hi_lo(result, player_socket)
-            player_socket.send(f"Result: {result}, Difference from target: {diff}".encode())
+            target, diff = hi_lo(result, player_socket)
+            player_socket.send(f"Result: {result:.4f}, Difference from target: {diff:.4f}".encode())
         for player_socket in players:
             player_socket.send("Are you ready? (yes/no): ".encode())
         ready = all(player_socket.recv(1024).decode().strip().lower() == "yes" for player_socket in players)
         if ready:
-            for player_socket in players:
-                result = player_eq(equation, hands[player_name], player_socket)
-                diff = hi_lo(result, player_socket)
-                player_socket.send(f"Result: {result}, Difference from target: {diff}".encode())
+            for player_socket, player_name in zip(players, player_names):
+                result = player_eq(player_equations[player_name], hands[player_name], player_socket)
+                target, diff = hi_lo(result, player_socket)
+                target_choices[player_name] = target
+                diff_to_target[player_name] = diff
+                player_socket.send(f"Result: {result:.4f}, Difference from target: {diff:.4f}".encode())
 
         # if not player_ready:
         #     player_socket.send("Time's up!")
 
         for player_socket, player_name in zip(players, player_names):
-            equation = player_equations.get(player_name, "")
+            equation = player_equations.get(player_name)
             if equation:
-                result = player_eq(equation, hands[player_name], player_socket)
-                diff = hi_lo(result, player_socket)
-                player_socket.send(f"Your final result: {result}, Difference from target: {diff}".encode())
+                # result = player_eq(equation, hands[player_name], player_socket)
+                # target, diff = hi_lo(result, player_socket)
+                player_socket.send(f"Your final result: {result:.4f}, Difference from target: {diff:.4f}".encode())
             else:
                 player_socket.send("No submissions have been made. You lost this round.".encode())
         
-        diff_to_target = {player: abs(result - target_choices[player]) for player, result in player_results.items()}
+        # diff_to_target = {player: abs(result - target_choices[player]) for player, result in player_results.items()}
 
         high_winner = min(((player, diff) for player, diff in diff_to_target.items() if target_choices[player] == 'high'), key=lambda x: x[1], default=None)
         low_winner = min(((player, diff) for player, diff in diff_to_target.items() if target_choices[player] == 'low'), key=lambda x: x[1], default=None)
 
-        for player_socket in players:
-            if high_winner:
-                player_socket.send((f"High winner is: {high_winner[0]} with a difference of {high_winner[1]} to the target").encode)
-            else:
-                print("No high equations were made.")
-
-            if low_winner:
-                print(f"Low winner is: {low_winner[0]} with a difference of {low_winner[1]} to the target")
-            else:
-                print("No low equations were made.")
         
-        player_socket.send("Do you want to continue the game? (yes/no): ".encode())
-        continue_response = player_socket.recv(1024).decode().strip().lower()
-        if continue_response != "yes":
-            players.remove(player_socket)
-            player_names.remove(player_name)
+        if high_winner:
+            for player_socket in players:
+                player_socket.send((f"High winner is: {high_winner[0]} with a difference of {high_winner[1]:.4f} to the target").encode())
+        else:
+            print("No high equations were made.")
+            for player_socket in players:
+                player_socket.send("No high equations were made.".encode())
+        if low_winner:
+            for player_socket in players:
+                player_socket.send(f"Low winner is: {low_winner[0]} with a difference of {low_winner[1]:.4f} to the target".encode())
+        else:
+            print("No low equations were made.")
+            for player_socket in players:
+                player_socket.send("No low equations were made.".encode())
+        print("Continue game?")
+        for player_socket in players:
+            player_socket.send("Do you want to continue the game? (yes/no): ".encode())
+            continue_response = player_socket.recv(1024).decode().strip().lower()
+            if continue_response != "yes":
+                print(player_name, "left the game.")
+                players.remove(player_socket)
+                player_names.remove(player_name)
 
         if len(players) < 2:
             for player_socket in players:
@@ -194,7 +204,11 @@ def player_eq(player_input, hand, player_socket):
     while len(cards) > 0:
         if cards[0] not in hand:
             player_socket.send(f"Make an equation from your hand: {' '.join(hand)}".encode())
-            return player_eq(player_socket.recv(1024).decode().strip().upper(), hand, player_socket)
+            print("card not in hand used")
+            print(player_input)
+            eq = player_socket.recv(1024).decode().strip().upper()
+            print(eq)
+            return player_eq(eq, hand, player_socket)
         if len(cards[0]) > 2:
             hand_copy.remove(cards[0])
             cards.pop(0)
@@ -214,7 +228,10 @@ def player_eq(player_input, hand, player_socket):
             operations.append(cards.pop(0))
     if len(hand_copy) != 0:
         player_socket.send(f"Make an equation from your hand: {' '.join(hand)}".encode())
-        return player_eq(player_socket.recv(1024).decode().strip().upper(), hand, player_socket)
+        print("not all cards used")
+        eq = player_socket.recv(1024).decode().strip().upper()
+        print(eq)
+        return player_eq(eq, hand, player_socket)
     result = operations.pop(0)
     for i in range(len(operations)):
         if operations[i] == "-":
@@ -243,7 +260,7 @@ def hi_lo(number, player_socket):
         diff = 20 - number
     else:
         diff = 1 - number
-    return abs(diff)
+    return target, abs(diff)
 
 if __name__ == '__main__':
     main()
