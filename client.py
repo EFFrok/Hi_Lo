@@ -2,7 +2,7 @@ import socket
 
 def main():
     player_name = input("Enter your player name: ")
-    client_socket = toTheServer()
+    client_socket = toTheServer(player_name)
     theGame(client_socket)
     client_socket.close()
 
@@ -15,10 +15,8 @@ def toTheServer(player_name):
 
 def theGame(client_socket):
 
-    initial_hand = client_socket.recv(1024).decode()
-    print("Initial hand:", initial_hand)
-    while True:
-        try:
+    try:
+        while True:
             message = client_socket.recv(1024).decode()
             if not message:
                 print("Connection closed by server.")
@@ -38,12 +36,10 @@ def theGame(client_socket):
                 client_socket.send(response.encode())
             elif "Game over." in message:
                 break
-        except ConnectionResetError:
-            print("Connection reset by server.")
-            break
-        except Exception as e:
-            print("An error occurred:", e)
-            break
+    except ConnectionResetError:
+        print("Connection reset by server.")
+    except Exception as e:
+        print("An error occurred:", e)
 
 if __name__ == "__main__":
         main()

@@ -18,32 +18,46 @@ def connections():
     players = []
     player_names = []
 
-    while len(players) < 4:
+    while True:
         client_socket, client_address = server_socket.accept()
         players.append(client_socket)
         player_name = client_socket.recv(1024).decode()
         player_names.append(player_name)
         print(f"{player_name} connected.")
 
-    print("All players connected. Ready to start the game?")
+        num_players_connected = len(players)
 
-    timeout_duration = 60
-    start_time = time.time()
-    while time.time() - start_time < timeout_duration:
-        all_ready = True
-        for player_socket in players:
-            player_socket.send("Are you ready to start the game? (yes/no): ".encode())
-            response = player_socket.recv(1024).decode().strip().lower()
-
-            if response != "yes":
-                all_ready = False
-                print("Player is not ready. Waiting for other players...")
-        
-        if all_ready:
-            print("All players are ready. Starting the game...")
+        if num_players_connected == 1:
+            for player_socket in players:
+                player_socket.send("Players connected: 1. Waiting for other players...".encode())
+        elif num_players_connected == 2:
+            for player_socket in players:
+                player_socket.send("Players connected: 2. Would you like to start the game with 2 players? (yes/no)".encode())
+            # Wait for responses
+            all_ready = all(player_socket.recv(1024).decode().strip().lower() == "yes" for player_socket in players)
+            if not all_ready:
+                for player_socket in players:
+                    player_socket.send("Not all players are ready. Waiting for more players for 1 minute...".encode())
+                time.sleep(60)
+                if len(players) == 2:
+                    break
+        elif num_players_connected == 3:
+            for player_socket in players:
+                player_socket.send("Players connected: 3. Would you like to start the game with 3 players? (yes/no)".encode())
+            # Wait for responses
+            all_ready = all(player_socket.recv(1024).decode().strip().lower() == "yes" for player_socket in players)
+            if not all_ready:
+                for player_socket in players:
+                    player_socket.send("Not all players are ready. Waiting for more players for 1 minute...".encode())
+                time.sleep(60)
+                if len(players) == 3:
+                    break
+        elif num_players_connected == 4:
+            for player_socket in players:
+                player_socket.send("All players connected. Starting a game.".encode())
             break
-    if not all_ready:
-        print("Time's out. Starting the game...")
+
+    return players, player_names
 
 def game_logic(players, player_names):
 
@@ -59,7 +73,7 @@ def game_logic(players, player_names):
             hands[player_name], deck = hand(hands[player_name], deck)
         
         for player_socket, player_name in zip(players, player_names):
-            player_socket.send(f"Welcome to the game, {player_name}!\nYour hand: {' '.join(hands[player_name])}".encode())
+            player_socket.send(f"Welcome to the Hi_Lo, {player_name}!\nYour hand: {' '.join(hands[player_name])}".encode())
 
         player_equations = {}
         target_choices = {}
