@@ -22,17 +22,17 @@ def theGame(client_socket):
                 print("Connection closed by server.")
                 break
             print(message)
-            if "Are you ready to start the game?" in message:
-                response = input("Are you ready to start the game? (yes/no): ")
+            if "Would you like to start the game with" in message:
+                response = input("")
                 client_socket.send(response.encode())
             elif "Make your equation:" in message:
-                equation = input("Make your equation: ")
+                equation = input("")
                 client_socket.send(equation.encode())
             elif "Are you ready? (yes/no):" in message:
-                response = input("Are you ready? (yes/no): ")
+                response = input("")
                 client_socket.send(response.encode())
             elif "Do you want to continue the game?" in message:
-                response = input("Do you want to continue the game? (yes/no): ")
+                response = input("")
                 client_socket.send(response.encode())
             elif "Game over." in message:
                 break
