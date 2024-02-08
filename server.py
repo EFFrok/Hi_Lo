@@ -122,8 +122,9 @@ def initialize_deck():
 
 def initialize_hands(player_names, hands, deck):
     # Deal initial hands to players
+    start_hand = ["+", "-", "/"]
     for player_name in player_names:
-        hands[player_name] = deck[:4]
+        hands[player_name] = start_hand + deck[:4]
         deck = deck[4:]
 
 def handle_player_turn(player_socket, player_name, player_equations, hands, target_choices, player_results, deck):
