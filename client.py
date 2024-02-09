@@ -23,17 +23,17 @@ def theGame(client_socket):
                 print("Connection closed by server.")
                 break
             print(message)
+            if "hand: " in message:
+                hand = [x.strip() for x in message.split("hand: ")[1].strip().split(" ")]
             if "Would you like to start" in message:
                 response = input("")
                 client_socket.send(response.encode())
-            elif "hand: " in message:
-                hand = [x.strip() for x in message.split("hand: ")[1].split(" ")]
             elif "discard" in message:
                 discard = input("").strip().upper()
                 while discard not in ["+", "-", "X"]:
                     discard = input("Remove +, - or X: ").strip().upper()
                 client_socket.send(discard.encode())
-            elif "Make" in message:
+            elif "Make your equation:" in message:
                 equation = input("")
                 result = player_eq(equation, hand)
                 target, diff = hi_lo(result)
@@ -68,7 +68,7 @@ def player_eq(player_input, hand):
     hand_copy = hand.copy()
 
     while len(cards) > 0:
-        if cards[0] not in hand:
+        if cards[0] not in hand_copy:
             print("Make an equation from your hand: ")
             print(f"{' '.join(hand)}")
             return player_eq(input(""), hand)

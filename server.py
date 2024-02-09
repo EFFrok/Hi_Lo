@@ -1,5 +1,4 @@
 import random
-import math
 import socket
 import time
 
@@ -19,7 +18,7 @@ def connections():
     player_names = []
 
     while True:
-        client_socket, client_address = server_socket.accept()
+        client_socket, _ = server_socket.accept()
         players.append(client_socket)
         player_name = client_socket.recv(1024).decode()
         player_names.append(player_name)
@@ -173,7 +172,6 @@ def hand(player_hand, deck):
 
 def xcounter(player_hand, deck, player_socket):
     x_count = player_hand.count("X")
-    removing = ["+", "-", "X"]
 
     while x_count > 0:
         player_socket.send("What to discard (+, - or X)?: ".encode())
@@ -196,74 +194,8 @@ def scounter(player_hand, deck, player_socket):
             player_hand.append(deck.pop(0))
             s_count -= 1
             player_socket.send(f"S in hand, new card added. Your current hand: {' '.join(player_hand)}".encode())
+            time.sleep(0.1)
     return player_hand, deck
-
-def player_eq(player_input, hand, player_socket):
-    cards = player_input.upper().split(" ")
-    operations = []
-    result = 0
-    hand_copy = hand.copy()
-
-    while len(cards) > 0:
-        if cards[0] not in hand:
-            player_socket.send(f"Make an equation from your hand: {' '.join(hand)}".encode())
-            print("card not in hand used")
-            print(player_input)
-            eq = player_socket.recv(1024).decode().strip().upper()
-            print(eq)
-            return player_eq(eq, hand, player_socket)
-        if len(cards[0]) > 2:
-            hand_copy.remove(cards[0])
-            cards.pop(0)
-            operations.append(10)
-        elif len(cards[0]) == 2:
-            hand_copy.remove(cards[0])
-            operations.append(int(cards.pop(0)[0]))
-        elif cards[0] == "S":
-            hand_copy.remove(cards[0])
-            cards.pop(0)
-            if len(cards[0]) > 2:
-                operations.append(math.sqrt(10))
-            else:
-                operations.append(math.sqrt(int(cards[0][0])))
-        else:
-            hand_copy.remove(cards[0])
-            operations.append(cards.pop(0))
-    if len(hand_copy) != 0:
-        player_socket.send(f"Make an equation from your hand: {' '.join(hand)}".encode())
-        print("not all cards used")
-        eq = player_socket.recv(1024).decode().strip().upper()
-        print(eq)
-        return player_eq(eq, hand, player_socket)
-    result = operations.pop(0)
-    for i in range(len(operations)):
-        if operations[i] == "-":
-            i += 1
-            result -= operations[i]
-        elif operations[i] == "+":
-            i += 1
-            result += operations[i]
-        elif operations[i] == "X":
-            i += 1
-            result *= operations[i]
-        elif operations[i] == "/":
-            i += 1
-            if operations[i] == 0:
-                player_socket.send(f"Can't divide by zero!\n Make a new equation: ".encode())
-                return player_eq(player_socket.recv(1024).decode().strip().upper(), hand, player_socket)
-            result /= operations[i]
-    
-    player_socket.send(f"{result:.4f}".encode())
-    return result
-
-def hi_lo(number, player_socket):
-    player_socket.send("Do you want to make High(20) or Low(1) equation?: ".encode())
-    target = player_socket.recv(1024).decode().strip()
-    if target == "high":
-        diff = 20 - number
-    else:
-        diff = 1 - number
-    return target, abs(diff)
 
 if __name__ == '__main__':
     main()
