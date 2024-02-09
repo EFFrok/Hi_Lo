@@ -110,15 +110,16 @@ def game_logic(players, player_names):
                 result = player_results[player_name]
                 diff = diff_to_target[player_name]
                 player_socket.send(f"Result: {result:.4f}, Difference from target: {diff:.4f}".encode())
+                time.sleep(0.1)
 
         # if not player_ready:
         #     player_socket.send("Time's up!")
 
         for player_socket, player_name in zip(players, player_names):
-            equation = player_equations.get(player_name)
-            if equation:
-                # result = player_eq(equation, hands[player_name], player_socket)
-                # target, diff = hi_lo(result, player_socket)
+            submission = player_results.get(player_name)
+            if submission:
+                result = player_results[player_name]
+                diff = diff_to_target[player_name]
                 player_socket.send(f"Your final result: {result:.4f}, Difference from target: {diff:.4f}".encode())
             else:
                 player_socket.send("No submissions have been made. You lost this round.".encode())
@@ -132,17 +133,21 @@ def game_logic(players, player_names):
         if high_winner:
             for player_socket in players:
                 player_socket.send((f"High winner is: {high_winner[0]} with a difference of {high_winner[1]:.4f} to the target").encode())
+                time.sleep(0.1)
         else:
             print("No high equations were made.")
             for player_socket in players:
                 player_socket.send("No high equations were made.".encode())
+                time.sleep(0.1)
         if low_winner:
             for player_socket in players:
                 player_socket.send(f"Low winner is: {low_winner[0]} with a difference of {low_winner[1]:.4f} to the target".encode())
+                time.sleep(0.1)
         else:
             print("No low equations were made.")
             for player_socket in players:
                 player_socket.send("No low equations were made.".encode())
+                time.sleep(0.1)
         print("Continue game?")
         for player_socket in players:
             player_socket.send("Do you want to continue the game? (yes/no): ".encode())
@@ -182,6 +187,7 @@ def xcounter(player_hand, deck, player_socket):
         player_hand.append(deck.pop(0))
         x_count -= 1
         player_socket.send(f"{discarded} removed, new card added to hand. Your current hand: {' '.join(player_hand)}".encode())
+        time.sleep(0.1)
 
     return player_hand, deck
 
