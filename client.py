@@ -39,23 +39,13 @@ def theGame(client_socket):
                 target, diff = hi_lo(result)
                 package = ' '.join(["{:.4f}".format(result), target, "{:.4f}".format(diff)])
                 client_socket.send(package.encode())
-            # elif "High(20) or Low(1)" in message:
-            #     target = input("").strip().lower()
-            #     while target != "high" and target != "low":
-            #         target = input("Type High or Low: ").strip().lower()
-            #     client_socket.send(target.encode())
             elif "(yes/no):" in message:
                 response = input("").strip().lower()
                 while response != "yes" and response != "no":
                     response = input(message)
                 client_socket.send(response.encode())
-            # elif "Do you want to continue the game?" in message:
-            #     response = input("")
-            #     client_socket.send(response.encode())
             elif "Game over." in message:
                 break
-            else:
-                continue
     except ConnectionResetError:
         print("Connection reset by server.")
     except Exception as e:

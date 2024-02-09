@@ -76,7 +76,8 @@ def game_logic(players, player_names):
             hands[player_name], deck = hand(hands[player_name], deck)
         
         for player_socket, player_name in zip(players, player_names):
-            player_socket.send(f"Welcome to the Hi_Lo, {player_name}!\nYour hand: {' '.join(hands[player_name])}".encode())
+            player_socket.send(f"Welcome to Hi_Lo, {player_name}!\nYour hand: {' '.join(hands[player_name])}".encode())
+            time.sleep(0.1)
 
         player_equations = {}
         target_choices = {}
