@@ -22,15 +22,14 @@ def theGame(client_socket):
             if not message:
                 print("Connection closed by server.")
                 break
-            
-            if "hand: " in message:
+            if "#" not in message:
                 print(message)
+            if "hand: " in message:
                 hand = [x.strip() for x in message.split("hand: ")[1].strip().split(" ")]
                 hand = xcounter(hand, client_socket)
                 hand = scounter(hand, client_socket)
                 client_socket.send("ready".encode())
-            if "Would you like to start" in message:
-                print(message)
+            elif "Would you like to start" in message:
                 response = input("")
                 client_socket.send(response.encode())
             # elif "discard" in message:
@@ -40,20 +39,17 @@ def theGame(client_socket):
             #         discard = input("Remove +, - or X: ").strip().upper()
             #     client_socket.send(discard.encode())
             elif "Make your equation:" in message:
-                print(message)
                 equation = input("")
                 result = player_eq(equation, hand)
                 target, diff = hi_lo(result)
                 package = ' '.join(["{:.4f}".format(result), target, "{:.4f}".format(diff)])
                 client_socket.send(package.encode())
             elif "(yes/no):" in message:
-                print(message)
                 response = input("").strip().lower()
                 while response != "yes" and response != "no":
                     response = input(message)
                 client_socket.send(response.encode())
             elif "Game over." in message:
-                print(message)
                 break
     except ConnectionResetError:
         print("Connection reset by server.")
@@ -69,7 +65,7 @@ def xcounter(hand, socket):
             discard = input("Remove +, - or X: ").strip().upper()
         hand.remove(discard)
         socket.send("draw".encode())
-        hand.append(socket.recv(1024).decode())
+        hand.append(socket.recv(1024).decode().replace("#", ""))
         x_count -= 1
         print(f"{discard} removed, new card added to hand. Your current hand: {' '.join(hand)}")
 
@@ -79,7 +75,7 @@ def scounter(hand, socket):
     s_count = hand.count("S")
     while s_count > 0:
         socket.send("draw".encode())
-        hand.append(socket.recv(1024).decode())
+        hand.append(socket.recv(1024).decode().replace("#", ""))
         s_count -= 1
         print(f"S in hand, new card added. Your current hand: {' '.join(hand)}")
 

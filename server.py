@@ -29,33 +29,18 @@ def connections():
         if num_players_connected == 1:
             for player_socket in players:
                 player_socket.send("Players connected: 1. Waiting for other players...".encode())
-        elif num_players_connected == 2:
+        if 1 < num_players_connected < 4:
             for player_socket in players:
-                player_socket.send("Players connected: 2. Would you like to start the game with 2 players? (yes/no)".encode())
+                player_socket.send("Players connected: {0}. Would you like to start the game with {0} players? (yes/no)".format(num_players_connected).encode())
             # Wait for responses
             all_ready = all(player_socket.recv(1024).decode().strip().lower() == "yes" for player_socket in players)
             if not all_ready:
                 for player_socket in players:
                     player_socket.send("Not all players are ready. Waiting for more players for 1 minute...".encode())
-                time.sleep(15)
-                if len(players) == 2:
-                    break
+                    continue
             else:
                 break
-        elif num_players_connected == 3:
-            for player_socket in players:
-                player_socket.send("Players connected: 3. Would you like to start the game with 3 players? (yes/no)".encode())
-            # Wait for responses
-            all_ready = all(player_socket.recv(1024).decode().strip().lower() == "yes" for player_socket in players)
-            if not all_ready:
-                for player_socket in players:
-                    player_socket.send("Not all players are ready. Waiting for more players for 1 minute...".encode())
-                time.sleep(15)
-                if len(players) == 3:
-                    break
-            else:
-                break
-        elif num_players_connected == 4:
+        if num_players_connected == 4:
             for player_socket in players:
                 player_socket.send("All players connected. Starting a game.".encode())
             break
@@ -83,21 +68,24 @@ def game_logic(players, player_names):
             time.sleep(0.1)
         
         # wait for player hand ok
-        ready_hands = 0
+        ready_hands = {}
+        for player in player_names:
+            ready_hands[player] = ""
+
         while True:
-            if ready_hands == len(players):
-                print("hands ok.")
+            if all(response == "ready" for response in ready_hands.values()):
                 break
-            for player_socket in players:
-                draw = player_socket.recv(1024).decode().strip().lower()
+            for player_socket, player_name in zip(players, player_names):
+                if ready_hands[player_name] != "ready":
+                    draw = player_socket.recv(1024).decode().strip().lower()
+                print(draw)
                 if draw == "ready":
-                    ready_hands += 1
+                    ready_hands[player_name] = "ready"
+                    print(player_name + " ready")
                 else:
                     # draw function
-                    player_socket.send(deck.pop(0).encode())
+                    player_socket.send(("#" + deck.pop(0)).encode())
 
-
-        player_equations = {}
         target_choices = {}
         diff_to_target = {}
         player_results = {}
@@ -114,6 +102,7 @@ def game_logic(players, player_names):
             player_socket.send("Make your equation: ".encode())
         for player_socket, player_name in zip(players, player_names):
             packet = player_socket.recv(1024).decode().split(" ")
+            print(packet)
             player_results[player_name] = float(packet[0])
             target_choices[player_name] = packet[1]
             diff_to_target[player_name] = float(packet[2])
@@ -124,12 +113,12 @@ def game_logic(players, player_names):
         for player_socket in players:
             player_socket.send("Are you ready? (yes/no): ".encode())
         ready = all(player_socket.recv(1024).decode().strip().lower() == "yes" for player_socket in players)
-        if ready:
-            for player_socket, player_name in zip(players, player_names):
-                result = player_results[player_name]
-                diff = diff_to_target[player_name]
-                player_socket.send(f"Result: {result:.4f}, Difference from target: {diff:.4f}".encode())
-                time.sleep(0.1)
+        # if ready:
+        #     for player_socket, player_name in zip(players, player_names):
+        #         result = player_results[player_name]
+        #         diff = diff_to_target[player_name]
+        #         player_socket.send(f"Result: {result:.4f}, Difference from target: {diff:.4f}".encode())
+        #         time.sleep(0.1)
 
         # if not player_ready:
         #     player_socket.send("Time's up!")
