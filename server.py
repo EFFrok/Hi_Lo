@@ -74,19 +74,37 @@ def game_logic(players, player_names):
         hands = {player_name: [] for player_name in player_names}
         for player_name in player_names:
             hands[player_name], deck = hand(hands[player_name], deck)
+        # remove Xs and Ss from deck
+        remove = ["X", "S"]
+        deck = [card for card in deck if card not in remove]
         
         for player_socket, player_name in zip(players, player_names):
             player_socket.send(f"Welcome to Hi_Lo, {player_name}!\nYour hand: {' '.join(hands[player_name])}".encode())
             time.sleep(0.1)
+        
+        # wait for player hand ok
+        ready_hands = 0
+        while True:
+            if ready_hands == len(players):
+                print("hands ok.")
+                break
+            for player_socket in players:
+                draw = player_socket.recv(1024).decode().strip().lower()
+                if draw == "ready":
+                    ready_hands += 1
+                else:
+                    # draw function
+                    player_socket.send(deck.pop(0).encode())
+
 
         player_equations = {}
         target_choices = {}
         diff_to_target = {}
         player_results = {}
 
-        for player_socket, player_name in zip(players, player_names):
-            hands[player_name], deck = xcounter(hands[player_name], deck, player_socket)
-            hands[player_name], deck = scounter(hands[player_name], deck, player_socket)
+        # for player_socket, player_name in zip(players, player_names):
+        #     hands[player_name], deck = xcounter(hands[player_name], deck, player_socket)
+        #     hands[player_name], deck = scounter(hands[player_name], deck, player_socket)
 
         # player_ready = False
         # timeout_duration = 120
